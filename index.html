@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>ARKANOID X</title>
 <link rel="stylesheet" href="style.css">
 </head>
@@ -18,9 +18,16 @@
   <canvas id="canvas" width="480" height="600"></canvas>
 </div>
 <div id="message"></div>
+<div id="touch-controls">
+  <button id="btn-laser" class="tbtn" aria-label="Laser">🔫<span>LASER</span></button>
+  <button id="btn-bomb"  class="tbtn" aria-label="Bomb">💣<span>BOMB</span></button>
+  <button id="btn-pause" class="tbtn" aria-label="Pause">⏸<span>PAUSE</span></button>
+  <button id="btn-mute"  class="tbtn" aria-label="Mute">🔊<span>SOUND</span></button>
+</div>
 <div id="controls">
   Mouse/←→ = move &nbsp;|&nbsp; Space/Click = launch/action &nbsp;|&nbsp;
   Z = laser &nbsp;|&nbsp; X = bomb &nbsp;|&nbsp; P = pause &nbsp;|&nbsp; M = mute
+  <br>On touch: drag = move &nbsp;|&nbsp; tap = launch/fire &nbsp;|&nbsp; buttons below
 </div>
 
 <script type="module" src="js/game.js"></script>

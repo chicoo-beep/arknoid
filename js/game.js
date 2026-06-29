@@ -78,11 +78,26 @@ function doAction(){
   }
 }
 
-canvas.addEventListener('mousemove', e => {
+// Map a screen X (mouse/touch) to the canvas's internal coordinate space —
+// the canvas is displayed scaled on small screens, so divide by rect.width.
+function toGameX(clientX){
   const rect = canvas.getBoundingClientRect();
-  G.mouseX = (e.clientX - rect.left) * (W / rect.width);
-});
+  return (clientX - rect.left) * (W / rect.width);
+}
+
+canvas.addEventListener('mousemove', e => { G.mouseX = toGameX(e.clientX); });
 canvas.addEventListener('mousedown', doAction);
+
+// ── Touch (mobile): drag = move paddle, tap = launch / fire ──
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  if (e.touches[0]) G.mouseX = toGameX(e.touches[0].clientX);
+  doAction();
+}, { passive: false });
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  if (e.touches[0]) G.mouseX = toGameX(e.touches[0].clientX);
+}, { passive: false });
 window.addEventListener('keydown', e => {
   G.keys[e.key] = true;
   const k = e.key.toLowerCase();
@@ -90,10 +105,31 @@ window.addEventListener('keydown', e => {
   if (k === 'z'){ initAudio(); fireLaser(); }
   if (k === 'x'){ initAudio(); detonateBomb(); }
   if (k === 'p') togglePause();
-  if (k === 'm'){ initAudio(); toggleMute(); }
+  if (k === 'm') doMute();
   if (k === 'enter' && (G.state === STATES.MENU || G.state === STATES.GAMEOVER)) doAction();
 });
 window.addEventListener('keyup', e => { G.keys[e.key] = false; });
+
+// ── On-screen buttons (mobile + desktop) ────────────────────
+const muteBtn = document.getElementById('btn-mute');
+function doMute(){
+  initAudio();
+  const muted = toggleMute();
+  if (muteBtn){
+    muteBtn.firstChild.textContent = muted ? '🔇' : '🔊';
+    muteBtn.classList.toggle('off', muted);
+  }
+}
+function wireBtn(id, fn){
+  const el = document.getElementById(id);
+  if (!el) return;
+  // Use pointerdown for instant response; fall back to click.
+  el.addEventListener('click', ev => { ev.preventDefault(); fn(); });
+}
+wireBtn('btn-laser', () => { initAudio(); fireLaser(); });
+wireBtn('btn-bomb',  () => { initAudio(); detonateBomb(); });
+wireBtn('btn-pause', () => { initAudio(); togglePause(); });
+wireBtn('btn-mute',  doMute);
 
 // ── Update ──────────────────────────────────────────────────
 function update(dt){
