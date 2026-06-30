@@ -27,6 +27,7 @@ export const G = {
   balls: [], drops: [], lasers: [], bricks: [], breakingBricks: [],
   laserCD: 0, bombCharges: 0,
   mouseX: 240,
+  pointerDirect: false,        // true = touch (snap paddle 1:1), false = mouse (eased)
   deadTimer: 0, clearTimer: 0,
   keys: {},
 };
