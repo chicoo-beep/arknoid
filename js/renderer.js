@@ -7,6 +7,29 @@ import { drawParticles, drawFloats, fx } from './particles.js';
 import { PU } from './powerups.js';
 import { isMuted } from './audio.js';
 
+// ── Tankaria logo ───────────────────────────────────────────
+// Drop the artwork at assets/tankaria.png (PNG/SVG with transparency
+// looks best). Until the file exists, every draw below is a no-op, so
+// the game runs unchanged.
+const logo = new Image();
+let logoReady = false;
+logo.onload  = () => { logoReady = logo.naturalWidth > 0; };
+logo.onerror = () => { logoReady = false; };
+logo.src = 'assets/tankaria.png';
+
+// Draw the logo centred at (cx,cy), scaled to fit within maxW x maxH,
+// preserving aspect ratio.
+function drawLogo(cx, cy, maxW, maxH, alpha, glow){
+  if (!logoReady) return;
+  const scale = Math.min(maxW / logo.naturalWidth, maxH / logo.naturalHeight);
+  const w = logo.naturalWidth * scale, h = logo.naturalHeight * scale;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  if (glow){ ctx.shadowColor = glow; ctx.shadowBlur = 18; }
+  ctx.drawImage(logo, cx - w/2, cy - h/2, w, h);
+  ctx.restore();
+}
+
 // ── Background fields ───────────────────────────────────────
 const MOTES = [];
 for (let i = 0; i < 120; i++) MOTES.push({
@@ -221,6 +244,9 @@ export function draw(){
   ctx.translate(fx.x, fx.y);
 
   drawBackground();
+  // Faint logo watermark behind the play area (not on the menu, which
+  // shows the big logo instead).
+  if (G.state !== STATES.MENU) drawLogo(W/2, H/2, 360, 360, 0.06);
   drawBricks();
   drawBreaking();
   drawDrops();
@@ -230,8 +256,15 @@ export function draw(){
   drawParticles();
   drawFloats();
 
+  // Small logo in the top-left corner during active play.
+  if (G.state === STATES.PLAYING || G.state === STATES.DEAD ||
+      G.state === STATES.PAUSED  || G.state === STATES.LEVELCLEAR){
+    drawLogo(48, 16, 80, 26, 0.55);
+  }
+
   if (G.state === STATES.MENU){
     ctx.fillStyle = '#000a'; ctx.fillRect(0, 0, W, H);
+    drawLogo(W/2, H/2-120, 300, 96, 1, G.world ? G.world.accent : '#00ddff');
     drawCenterText('ARKANOID X', 'Click or press Space to launch');
     ctx.fillStyle = '#888'; ctx.font = '12px Courier New'; ctx.textAlign = 'center';
     ctx.fillText('5 WORLDS · Z laser · X bomb · P pause · M mute', W/2, H/2+58);
