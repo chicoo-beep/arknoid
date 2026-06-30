@@ -85,10 +85,11 @@ export function fireLaser(){
 
 // ── Per-entity updates ──────────────────────────────────────
 export function updatePaddle(dt){
-  if (G.keys['ArrowLeft'])  pad.x -= pad.speed * dt;
-  if (G.keys['ArrowRight']) pad.x += pad.speed * dt;
+  if (G.keys['ArrowLeft'])  { pad.x -= pad.speed * dt; G.pointerDirect = false; }
+  if (G.keys['ArrowRight']) { pad.x += pad.speed * dt; G.pointerDirect = false; }
   const target = G.mouseX - pad.w/2;
-  pad.x += (target - pad.x) * 0.35 * dt;
+  if (G.pointerDirect) pad.x = target;                 // touch: snap straight to finger
+  else pad.x += (target - pad.x) * 0.35 * dt;          // mouse: eased follow
   pad.x = Math.max(0, Math.min(W - pad.w, pad.x));
 }
 

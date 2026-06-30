@@ -85,19 +85,26 @@ function toGameX(clientX){
   return (clientX - rect.left) * (W / rect.width);
 }
 
-canvas.addEventListener('mousemove', e => { G.mouseX = toGameX(e.clientX); });
+canvas.addEventListener('mousemove', e => { G.pointerDirect = false; G.mouseX = toGameX(e.clientX); });
 canvas.addEventListener('mousedown', doAction);
 
-// ── Touch (mobile): drag = move paddle, tap = launch / fire ──
+// ── Touch (mobile): drag = move paddle (1:1, snappy), tap = launch / fire ──
+// Movement is tracked on the window while a drag is active, so the finger can
+// roam off the canvas (e.g. over the buttons) without the paddle freezing.
+let dragging = false;
 canvas.addEventListener('touchstart', e => {
   e.preventDefault();
+  dragging = true; G.pointerDirect = true;
   if (e.touches[0]) G.mouseX = toGameX(e.touches[0].clientX);
   doAction();
 }, { passive: false });
-canvas.addEventListener('touchmove', e => {
+window.addEventListener('touchmove', e => {
+  if (!dragging) return;
   e.preventDefault();
   if (e.touches[0]) G.mouseX = toGameX(e.touches[0].clientX);
 }, { passive: false });
+window.addEventListener('touchend', () => { dragging = false; });
+window.addEventListener('touchcancel', () => { dragging = false; });
 window.addEventListener('keydown', e => {
   G.keys[e.key] = true;
   const k = e.key.toLowerCase();
