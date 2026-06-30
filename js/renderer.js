@@ -259,12 +259,12 @@ export function draw(){
   // Small logo in the top-left corner during active play.
   if (G.state === STATES.PLAYING || G.state === STATES.DEAD ||
       G.state === STATES.PAUSED  || G.state === STATES.LEVELCLEAR){
-    drawLogo(48, 16, 80, 26, 0.55);
+    drawLogo(40, 28, 60, 42, 0.6);
   }
 
   if (G.state === STATES.MENU){
     ctx.fillStyle = '#000a'; ctx.fillRect(0, 0, W, H);
-    drawLogo(W/2, H/2-120, 300, 96, 1, G.world ? G.world.accent : '#00ddff');
+    drawLogo(W/2, 150, 240, 180, 1, G.world ? G.world.accent : '#00ddff');
     drawCenterText('ARKANOID X', 'Click or press Space to launch');
     ctx.fillStyle = '#888'; ctx.font = '12px Courier New'; ctx.textAlign = 'center';
     ctx.fillText('5 WORLDS · Z laser · X bomb · P pause · M mute', W/2, H/2+58);
