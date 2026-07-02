@@ -42,6 +42,16 @@ for (let i = 0; i < 6; i++) NEBULA.push({
   x: Math.random()*W, y: Math.random()*H, r: 60+Math.random()*100,
   hue: Math.random()*360, dx:(Math.random()-0.5)*0.15, dy:(Math.random()-0.5)*0.1,
 });
+// Under-floor cable trays for the Tankaria world (colored bundles that
+// drift slowly across the void beneath the panels).
+const CABLE_COLORS = ['#c0392b','#2980b9','#f1c40f','#27ae60','#e67e22','#8e44ad'];
+const CABLES = [];
+for (let i = 0; i < 7; i++) CABLES.push({
+  y: 90 + i * 70 + Math.random()*30,
+  color: CABLE_COLORS[i % CABLE_COLORS.length],
+  amp: 6 + Math.random()*10, phase: Math.random()*Math.PI*2,
+  speed: 0.1 + Math.random()*0.2, offset: Math.random()*W,
+});
 let bgTick = 0;
 
 function fillGrad(c1, c2){
@@ -108,6 +118,32 @@ function drawBackground(){
     const sg = ctx.createLinearGradient(0, sy-30, 0, sy+30);
     sg.addColorStop(0, 'transparent'); sg.addColorStop(0.5, 'rgba(0,255,240,0.10)'); sg.addColorStop(1, 'transparent');
     ctx.fillStyle = sg; ctx.fillRect(0, sy-30, W, 60);
+  } else if (bg === 'tankaria'){
+    // Under-floor void seen from above: dark cavity + cable trays.
+    fillGrad('#0b0e13', '#030406');
+    // cable bundles (each = a few parallel strands with a slow wave)
+    for (const cb of CABLES){
+      cb.offset += cb.speed;
+      ctx.strokeStyle = cb.color; ctx.globalAlpha = 0.5; ctx.lineWidth = 2;
+      for (let s = -1; s <= 1; s++){
+        ctx.beginPath();
+        for (let x = -10; x <= W+10; x += 12){
+          const y = cb.y + s*5 + Math.sin((x + cb.offset)*0.025 + cb.phase)*cb.amp;
+          x === -10 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+    }
+    ctx.globalAlpha = 1;
+    // faint pedestal grid (the raised-floor support points)
+    ctx.fillStyle = 'rgba(232,200,112,0.12)';
+    for (let y = 60; y < H; y += 48) for (let x = 24; x < W; x += 48){
+      ctx.beginPath(); ctx.arc(x, y, 1.6, 0, Math.PI*2); ctx.fill();
+    }
+    // cool cooling glow from below
+    const g = ctx.createRadialGradient(W/2, H, 0, W/2, H, H*0.8);
+    g.addColorStop(0, 'rgba(60,150,180,0.10)'); g.addColorStop(1, 'transparent');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   } else if (bg === 'temple'){
     fillGrad('#1c1408', '#050402');
     // warm columns
@@ -172,9 +208,39 @@ function drawBall(b){
   ctx.shadowBlur = 0; ctx.globalAlpha = 1;
 }
 
+// Raised-access-floor panel look for the Tankaria world.
+function drawPanelTile(b){
+  const dmg = b.maxHits > 1 ? (b.hitsLeft / b.maxHits) : 1;
+  ctx.save();
+  ctx.globalAlpha = 0.6 + 0.4*dmg;
+  // brushed-metal face
+  const g = ctx.createLinearGradient(b.x, b.y, b.x, b.y+b.h);
+  g.addColorStop(0, '#ffffff33'); g.addColorStop(0.12, b.color);
+  g.addColorStop(0.9, b.color); g.addColorStop(1, '#00000055');
+  ctx.fillStyle = g;
+  ctx.fillRect(b.x, b.y, b.w, b.h);
+  // seam border
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 1;
+  ctx.strokeRect(b.x+0.5, b.y+0.5, b.w-1, b.h-1);
+  // corner pedestal studs
+  ctx.fillStyle = 'rgba(20,20,24,0.8)';
+  const d = 2.2, m = 3.5;
+  [[b.x+m,b.y+m],[b.x+b.w-m,b.y+m],[b.x+m,b.y+b.h-m],[b.x+b.w-m,b.y+b.h-m]].forEach(([px,py])=>{
+    ctx.beginPath(); ctx.arc(px, py, d, 0, Math.PI*2); ctx.fill();
+  });
+  // special glyph / hit count
+  if (b.special === 'BOMB'){ ctx.fillStyle = '#000'; ctx.font = 'bold 11px Courier New'; ctx.textAlign = 'center'; ctx.fillText('✸', b.x+b.w/2, b.y+b.h-4); }
+  else if (b.special === 'ELECTRIC'){ ctx.fillStyle = '#003344'; ctx.font = 'bold 11px Courier New'; ctx.textAlign = 'center'; ctx.fillText('⚡', b.x+b.w/2, b.y+b.h-4); }
+  else if (b.maxHits > 1){ ctx.fillStyle = '#1a1a1a'; ctx.font = 'bold 9px Courier New'; ctx.textAlign = 'center'; ctx.fillText(b.hitsLeft, b.x+b.w/2, b.y+b.h-4); }
+  ctx.restore();
+}
+
 function drawBricks(){
+  const tiles = G.world && G.world.tiles;
   for (const b of G.bricks){
     if (!b.alive) continue;
+    if (tiles){ drawPanelTile(b); continue; }
     b.glowPhase += 0.05;
     const dmg = b.maxHits > 1 ? (b.hitsLeft / b.maxHits) : 1;
     ctx.save();
@@ -195,11 +261,26 @@ function drawBricks(){
 function drawBreaking(){
   for (const b of G.breakingBricks){
     const t = b.frame / b.maxFrames;
-    ctx.globalAlpha = 1 - t;
-    ctx.strokeStyle = b.color; ctx.lineWidth = 2;
-    ctx.shadowColor = b.color; ctx.shadowBlur = 10;
-    const exp = t * 8;
-    ctx.strokeRect(b.x-exp, b.y-exp, b.w+exp*2, b.h+exp*2);
+    if (b.lift){
+      // panel lifts up, tilts and fades — like a floor tile being pulled out
+      ctx.save();
+      ctx.globalAlpha = 1 - t;
+      const cx = b.x + b.w/2, cy = b.y + b.h/2;
+      ctx.translate(cx, cy - t*22);
+      ctx.scale(1 + t*0.15, 1 - t*0.35);   // rise + squash for perspective
+      ctx.fillStyle = b.color;
+      ctx.shadowColor = '#000'; ctx.shadowBlur = 8;
+      ctx.fillRect(-b.w/2, -b.h/2, b.w, b.h);
+      ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 1;
+      ctx.strokeRect(-b.w/2+0.5, -b.h/2+0.5, b.w-1, b.h-1);
+      ctx.restore();
+    } else {
+      ctx.globalAlpha = 1 - t;
+      ctx.strokeStyle = b.color; ctx.lineWidth = 2;
+      ctx.shadowColor = b.color; ctx.shadowBlur = 10;
+      const exp = t * 8;
+      ctx.strokeRect(b.x-exp, b.y-exp, b.w+exp*2, b.h+exp*2);
+    }
     ctx.shadowBlur = 0;
   }
   ctx.globalAlpha = 1;
@@ -267,7 +348,7 @@ export function draw(){
     drawLogo(W/2, 150, 240, 180, 1, G.world ? G.world.accent : '#00ddff');
     drawCenterText('ARKANOID X', 'Click or press Space to launch');
     ctx.fillStyle = '#888'; ctx.font = '12px Courier New'; ctx.textAlign = 'center';
-    ctx.fillText('5 WORLDS · Z laser · X bomb · P pause · M mute', W/2, H/2+58);
+    ctx.fillText('6 WORLDS · Z laser · X bomb · P pause · M mute', W/2, H/2+58);
   } else if (G.state === STATES.PAUSED){
     ctx.fillStyle = '#000a'; ctx.fillRect(0, 0, W, H);
     drawCenterText('PAUSED', 'Press P to resume');

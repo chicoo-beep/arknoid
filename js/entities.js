@@ -47,7 +47,8 @@ export function triggerBrickDeath(b){
   spawnFragments(b.x+b.w/2, b.y+b.h/2, b.w, b.h, b.color, 8);
   spawnSmoke(b.x+b.w/2, b.y+b.h/2, 3);
   shake(3, 5);
-  G.breakingBricks.push({ x:b.x, y:b.y, w:b.w, h:b.h, color:b.color, frame:0, maxFrames:6 });
+  const lift = !!(G.world && G.world.tiles);
+  G.breakingBricks.push({ x:b.x, y:b.y, w:b.w, h:b.h, color:b.color, frame:0, maxFrames: lift ? 12 : 6, lift });
   SFX.brick();
 
   if (b.special === 'BOMB'){

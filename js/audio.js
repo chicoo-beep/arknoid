@@ -34,6 +34,7 @@ const MUSIC_FILES = {
   volcano: 'assets/audio/music-volcano.mp3',
   cyber:   'assets/audio/music-cyber.mp3',
   temple:  'assets/audio/music-temple.mp3',
+  tankaria:'assets/audio/music-tankaria.mp3',
 };
 
 export function initAudio(){
@@ -136,6 +137,11 @@ const TRACKS = {
     tempo: 340, leadWave: 'triangle', bassWave: 'sine',     leadVol: 0.06, bassVol: 0.06,
     lead: [293.6,_,349.2,_,392,_,349.2,_,261.6,_,293.6,_,349.2,_,_,_],
     bass: [98,_,_,_,116.5,_,_,_,87.3,_,_,_,98,_,_,_],
+  },
+  tankaria: { // clean, corporate/techy major arpeggio
+    tempo: 300, leadWave: 'triangle', bassWave: 'sine',     leadVol: 0.055, bassVol: 0.06,
+    lead: [392,_,523,_,659,_,523,_,440,_,587,_,494,_,_,_],
+    bass: [98,_,_,_,131,_,_,_,110,_,_,_,147,_,_,_],
   },
 };
 
