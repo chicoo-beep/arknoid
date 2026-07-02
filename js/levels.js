@@ -48,6 +48,14 @@ export const WORLDS = [
     palette:['','#d4a843','#bd7e2c','#e8c870','#73b06a','#3f937f','#8f6a3a','#f2e6b4','#e69128','#86e6c6'],
     moteColor:'#e8c870',
   },
+  {
+    // Tankaria brand world: bricks are raised-access-floor panels that lift
+    // out when cleared, over an under-floor void of cable trays.
+    name:'TANKARIA', bg:'tankaria', music:'tankaria', accent:'#e8c870',
+    tiles:true,                       // renderer draws bricks as floor panels
+    palette:['','#9aa0aa','#b8bec8','#c9cdd4','#c9a24b','#d9b45a','#7f8792','#eadfb4','#e69128','#8fd0c0'],
+    moteColor:'#e8c870',
+  },
 ];
 
 export function getWorld(level){ return WORLDS[(level - 1) % WORLDS.length]; }
